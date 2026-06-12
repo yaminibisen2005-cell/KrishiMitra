@@ -1,0 +1,6 @@
+{
+  "name": "KrishiMitra",
+  "description": "Smart Agriculture platform offering AI-driven crop recommendations, crop disease detection, localized real-time weather analytics, and live agricultural market prices.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
