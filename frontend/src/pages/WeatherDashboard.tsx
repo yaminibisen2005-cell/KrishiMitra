@@ -15,6 +15,14 @@ import { useTranslation } from '../context/LanguageContext';
 export default function WeatherDashboard() {
   const { t } = useTranslation();
 
+  useEffect(() => {
+  fetchWeather(currentCity);
+}, []);
+
+useEffect(() => {
+  console.log(weather);
+}, [weather]);
+
   const [cityInput, setCityInput] = useState('Nagpur, MH');
   const [currentCity, setCurrentCity] = useState('Nagpur, MH');
   const [isLoading, setIsLoading] = useState(false);

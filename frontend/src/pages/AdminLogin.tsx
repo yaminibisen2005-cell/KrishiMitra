@@ -57,13 +57,6 @@ export default function AdminLogin() {
     }
   };
 
-  const handleAutofill = () => {
-    setEmail('admin@krishimitra.com');
-    setPassword('admin123');
-    setValidationErrors({});
-    setAuthError('');
-  };
-
   return (
     <div className="bg-gradient-to-br from-slate-900 via-zinc-950 to-slate-900 min-h-screen py-16 px-4 flex flex-col justify-center font-sans text-white" id="admin-login-root">
       
@@ -90,22 +83,6 @@ export default function AdminLogin() {
           </div>
           <h2 className="text-2xl font-black text-white tracking-tight">{t('adminConsoleTitle')}</h2>
           <p className="text-xs text-zinc-400 mt-1.5">{t('adminLoginSub')}</p>
-        </div>
-
-        {/* Credentials reminder badge */}
-        <div className="bg-zinc-800/40 border border-zinc-750/50 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div>
-            <p className="text-[9px] font-extrabold text-amber-400 uppercase tracking-widest leading-none">{t('testingCredentials')}</p>
-            <p className="text-xs text-zinc-300 mt-1.5">{t('adminEmail')}: <span className="font-mono text-white select-all">admin@krishimitra.com</span></p>
-            <p className="text-xs text-zinc-300">{t('password')}: <span className="font-mono text-white select-all">admin123</span></p>
-          </div>
-          <button 
-            type="button" 
-            onClick={handleAutofill}
-            className="bg-amber-500 hover:bg-amber-600 text-zinc-950 text-[11px] font-black px-3.5 py-2 rounded-xl transition duration-150 flex-shrink-0 cursor-pointer"
-          >
-            {t('autofillMock')}
-          </button>
         </div>
 
         {authError && (

@@ -1,14 +1,22 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import api from "./api";
+import { MarketPrice } from "../types";
 
-import { MarketPrice } from '../types';
-import { getSavedMarketPrices } from './dbStore';
+export const getMarketPrices = async (): Promise<MarketPrice[]> => {
+  const response = await api.get("/api/market");
+  return response.data;
+};
 
-export async function getMarketPrices(): Promise<MarketPrice[]> {
-  // Simulate delay
-  await new Promise((resolve) => setTimeout(resolve, 600));
+export const saveMarketPrice = async (price: Omit<MarketPrice, "id">) => {
+  const response = await api.post("/api/market", price);
+  return response.data;
+};
 
-  return getSavedMarketPrices();
-}
+export const updateMarketPrice = async (id: string, price: Omit<MarketPrice, "id">) => {
+  const response = await api.put(`/api/market/${id}`, price);
+  return response.data;
+};
+
+export const deleteMarketPrice = async (id: string) => {
+  const response = await api.delete(`/api/market/${id}`);
+  return response.data;
+};

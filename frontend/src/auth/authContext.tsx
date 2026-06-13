@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService, UserSession, UserRecord } from './authService';
+import { authService, UserSession, UserRecord } from '../services/authService';
 
 interface AuthContextType {
   user: UserSession | null;

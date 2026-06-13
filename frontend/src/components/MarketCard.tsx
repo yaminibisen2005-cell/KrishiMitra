@@ -70,7 +70,7 @@ export default function MarketCard({ item }: MarketCardProps) {
             ₹{item.price}
           </span>
           <span className="text-xs text-emerald-700 font-semibold uppercase">
-            / {t('market.quintal')}
+            / {('market.quintal')}
           </span>
         </div>
       </div>

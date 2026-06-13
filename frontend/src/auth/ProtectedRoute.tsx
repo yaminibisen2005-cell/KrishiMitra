@@ -1,18 +1,9 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './authContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -30,7 +21,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // Logged in but not 'user' role
-  if (user.role !== 'user') {
+  const normalizedRole = user.role ? user.role.toLowerCase().replace('role_', '') : '';
+  if (normalizedRole !== 'user') {
     return <Navigate to="/unauthorized" replace />;
   }
 

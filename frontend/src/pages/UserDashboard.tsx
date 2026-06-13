@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/authContext';
 import { useTranslation, LanguageType } from '../context/LanguageContext';
-import { getSavedMarketPrices, getSavedHelplineTickets } from '../services/dbStore';
 import { getWeatherData } from '../services/weatherService';
+import { getMarketPrices } from '../services/marketService';
 import { getRecommendations } from '../services/cropService';
+import { getTickets } from '../services/ticketService';
 import { MarketPrice, WeatherData, CropRecommendationResult } from '../types';
 import MarketCard from '../components/MarketCard';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -46,17 +47,14 @@ export default function UserDashboard() {
       let city = 'Nagpur, MH';
       let soil = 'Loamy Soil';
       
-      const registeredUsersRaw = localStorage.getItem('krishimitra_registered_users');
-      if (registeredUsersRaw && user?.mobile) {
-        const list = JSON.parse(registeredUsersRaw);
-        const match = list.find((u: any) => u.mobile === user.mobile);
-        if (match) {
-          setProfile({
-            village: match.village,
-            district: match.district,
-            state: match.state
-          });
-          city = `${match.district}, ${match.state ? match.state.substring(0, 2).toUpperCase() : 'IN'}`;
+      if (user) {
+        setProfile({
+          village: user.village,
+          district: user.district,
+          state: user.state
+        });
+        if (user.district) {
+          city = `${user.district}, ${user.state ? user.state.substring(0, 2).toUpperCase() : 'IN'}`;
         }
       }
 
@@ -65,9 +63,13 @@ export default function UserDashboard() {
         const weatherData = await getWeatherData(city);
         setWeather(weatherData);
       } catch (e) {
-        // Fallback to Nagpur weather
-        const fallbackWeather = await getWeatherData('Nagpur, MH');
-        setWeather(fallbackWeather);
+        try {
+          // Fallback to Nagpur weather
+          const fallbackWeather = await getWeatherData('Nagpur, MH');
+          setWeather(fallbackWeather);
+        } catch (innerErr) {
+          console.error("Weather completely failed", innerErr);
+        }
       }
 
       // 3. Fetch crop recommendations preview
@@ -79,15 +81,15 @@ export default function UserDashboard() {
       }
 
       // 4. Fetch top 3 market prices
-      const prices = getSavedMarketPrices();
-      setTopPrices(prices.slice(0, 3));
+      try {
+        const prices = await getMarketPrices();
+        setTopPrices(prices.slice(0, 3));
+      } catch (e) {
+        console.error("Failed to pull market API index", e);
+      }
 
       // 5. Construct custom system alerts and agronomist helpline notifications
-      const tickets = getSavedHelplineTickets();
-      const userTickets = tickets.filter(tItem => tItem.farmerName === user?.name || tItem.phone === user?.mobile);
-      const solvedInquiries = userTickets.filter(tItem => tItem.status === 'Resolved');
-
-      const alerts = [
+      let alerts = [
         {
           id: 'n-001',
           type: 'alert',
@@ -104,14 +106,22 @@ export default function UserDashboard() {
         }
       ];
 
-      if (solvedInquiries.length > 0) {
-        alerts.unshift({
-          id: 'n-reply',
-          type: 'support',
-          title: t('dashboard.notifReplyTitle'),
-          body: t('dashboard.notifReplyBody').replace('{subject}', solvedInquiries[0].subject),
-          date: t('dashboard.justNow')
-        });
+      try {
+        const tickets = await getTickets();
+        const userTickets = tickets.filter(tItem => tItem.farmerName === user?.name || tItem.phone === user?.mobile);
+        const solvedInquiries = userTickets.filter(tItem => tItem.status === 'Resolved');
+
+        if (solvedInquiries.length > 0) {
+          alerts.unshift({
+            id: 'n-reply',
+            type: 'support',
+            title: t('dashboard.notifReplyTitle'),
+            body: t('dashboard.notifReplyBody').replace('{subject}', solvedInquiries[0].subject),
+            date: t('dashboard.justNow')
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch tickets feed", err);
       }
 
       setNotifications(alerts);

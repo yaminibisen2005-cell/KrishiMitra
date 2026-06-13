@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  getSavedMarketPrices, 
-  saveMarketPrices, 
-  getSavedHelplineTickets, 
-  saveHelplineTickets, 
-  HelplineTicket 
-} from '../services/dbStore';
+import { getMarketPrices, saveMarketPrice, updateMarketPrice, deleteMarketPrice } from '../services/marketService';
+import { getTickets, replyToTicket, HelplineTicket } from '../services/ticketService';
 import { MarketPrice } from '../types';
-import { authService } from '../auth/authService';
+
 import { 
   ShieldAlert, 
   TrendingUp, 
@@ -49,9 +44,24 @@ export default function AdminPanel() {
   const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
-    setPrices(getSavedMarketPrices());
-    setTickets(getSavedHelplineTickets());
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    try {
+      const pricesData = await getMarketPrices();
+      setPrices(pricesData || []);
+    } catch (err) {
+      console.error("Failed to fetch admin prices", err);
+    }
+
+    try {
+      const ticketsData = await getTickets();
+      setTickets(ticketsData || []);
+    } catch (err) {
+      console.error("Failed to fetch admin tickets", err);
+    }
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -59,7 +69,7 @@ export default function AdminPanel() {
   };
 
   // 1. ADD / EDIT EXECUTOR
-  const handleSavePrice = (e: React.FormEvent) => {
+  const handleSavePrice = async (e: React.FormEvent) => {
     e.preventDefault();
     setMarketError('');
 
@@ -78,43 +88,27 @@ export default function AdminPanel() {
 
     const trend = currentVal > prevVal ? 'up' : currentVal < prevVal ? 'down' : 'stable';
 
-    let updatedList: MarketPrice[];
-
-    if (editingId) {
-      // Edit mode
-      updatedList = prices.map((item) => 
-        item.id === editingId
-          ? { ...item, crop: crop.trim(), price: currentVal, previousPrice: prevVal, trend, hub: hub.trim(), state: item.state, category }
-          : item
-      );
-      showToast(t('adminPanel.toastUpdateSuccess'));
-    } else {
-      // Create mode
-      const newItem: MarketPrice = {
-        id: `m-custom-${Date.now()}`,
-        crop: crop.trim(),
-        price: currentVal,
-        previousPrice: prevVal,
-        trend,
-        hub: hub.trim(),
-        state: state.trim(),
-        category,
-      };
-      updatedList = [...prices, newItem];
-      showToast(t('adminPanel.toastAddSuccess'));
+    try {
+      if (editingId) {
+        await updateMarketPrice(editingId, { crop: crop.trim(), price: currentVal, previousPrice: prevVal, trend, hub: hub.trim(), state: state.trim(), category });
+        showToast(t('adminPanel.toastUpdateSuccess'));
+      } else {
+        await saveMarketPrice({ crop: crop.trim(), price: currentVal, previousPrice: prevVal, trend, hub: hub.trim(), state: state.trim(), category });
+        showToast(t('adminPanel.toastAddSuccess'));
+      }
+      
+      loadData();
+      
+      setCrop('');
+      setPrice('');
+      setPrevPrice('');
+      setHub('');
+      setState('');
+      setCategory('Vegetables');
+      setEditingId(null);
+    } catch (err) {
+      setMarketError("Failed to save market price.");
     }
-
-    setPrices(updatedList);
-    saveMarketPrices(updatedList);
-
-    // Reset Form fields
-    setCrop('');
-    setPrice('');
-    setPrevPrice('');
-    setHub('');
-    setState('');
-    setCategory('Vegetables');
-    setEditingId(null);
   };
 
   const handleEditClick = (item: MarketPrice) => {
@@ -128,50 +122,45 @@ export default function AdminPanel() {
     setMarketError('');
   };
 
-  const handleDeletePrice = (id: string) => {
-    const updated = prices.filter((item) => item.id !== id);
-    setPrices(updated);
-    saveMarketPrices(updated);
-    showToast(t('adminPanel.toastDeleteSuccess'));
-    if (editingId === id) {
-      setEditingId(null);
-      setCrop('');
-      setPrice('');
-      setPrevPrice('');
-      setHub('');
-      setState('');
+  const handleDeletePrice = async (id: string) => {
+    try {
+      await deleteMarketPrice(id);
+      showToast(t('adminPanel.toastDeleteSuccess'));
+      loadData();
+      if (editingId === id) {
+        setEditingId(null);
+        setCrop('');
+        setPrice('');
+        setPrevPrice('');
+        setHub('');
+        setState('');
+      }
+    } catch (err) {
+      console.error("Failed to delete market price", err);
     }
   };
 
   // 2. HELPLINE RESPONSE LOGIC
-  const handleTicketReply = (id: string) => {
+  const handleTicketReply = async (id: string) => {
     const text = replyText[id];
     if (!text || !text.trim()) {
       alert(t('adminPanel.mandiFormErrBlanks'));
       return;
     }
 
-    const updated = tickets.map((t) => 
-      t.id === id 
-        ? { ...t, status: 'Resolved' as const, adminReply: text.trim() } 
-        : t
-    );
-
-    setTickets(updated);
-    saveHelplineTickets(updated);
-    showToast(t('adminPanel.toastReplySuccess'));
-    
-    // Clear individual reply input state
-    setReplyText((prev) => ({ ...prev, [id]: '' }));
+    try {
+      await replyToTicket(id, text.trim());
+      showToast(t('adminPanel.toastReplySuccess'));
+      setReplyText((prev) => ({ ...prev, [id]: '' }));
+      loadData();
+    } catch (err) {
+      console.error("Failed to submit reply", err);
+    }
   };
 
   // 3. SYSTEM RESTORE
   const handleFactoryReset = () => {
     if (window.confirm(t('adminPanel.alertConfirmRestore'))) {
-      localStorage.removeItem('krishimitra_market_prices');
-      localStorage.removeItem('krishimitra_helpline_tickets');
-      setPrices(getSavedMarketPrices());
-      setTickets(getSavedHelplineTickets());
       showToast(t('adminPanel.toastRestoreSuccess'));
     }
   };
@@ -215,14 +204,16 @@ export default function AdminPanel() {
             <div className="text-center font-sans">
               <span className="text-[10px] text-emerald-300 font-extrabold uppercase">{t('adminPanel.metricFarmers')}</span>
               <p className="text-xl md:text-2xl font-black text-white leading-none mt-0.5">
-                {authService.getTotalFarmersCount()}
+                {/* Change this to a backend stat variable later */}
+                ---
               </p>
             </div>
             <div className="border-l border-emerald-800/80 h-8" />
             <div className="text-center font-sans">
               <span className="text-[10px] text-emerald-300 font-extrabold uppercase">{t('adminPanel.metricSessions')}</span>
               <p className="text-xl md:text-2xl font-black text-emerald-300 leading-none mt-0.5">
-                {authService.getActiveSessionsCount()}
+                {/* Change this to a backend stat variable later */}
+                ---
               </p>
             </div>
           </div>

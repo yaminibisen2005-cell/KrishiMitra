@@ -1,13 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './authContext';
-import LoadingSpinner from '../components/LoadingSpinner';
-
 interface RoleProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: ('user' | 'admin')[];
@@ -33,9 +23,11 @@ export default function RoleProtectedRoute({ children, allowedRoles = ['admin'] 
   }
 
   // Logged in but doesn't have required role
-  if (!allowedRoles.includes(user.role)) {
+  const normalizedRole = user.role ? user.role.toLowerCase().replace('role_', '') : '';
+  if (!allowedRoles.includes(normalizedRole as 'user' | 'admin')) {
     return <Navigate to="/unauthorized" replace />;
   }
 
   return <>{children}</>;
 }
+

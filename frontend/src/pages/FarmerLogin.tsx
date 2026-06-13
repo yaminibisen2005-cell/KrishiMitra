@@ -61,14 +61,6 @@ export default function FarmerLogin() {
     }
   };
 
-  // Utility to auto-fill mock credentials for easy testing
-  const handleAutofill = () => {
-    setMobile('9876543210');
-    setPassword('farmer123');
-    setValidationErrors({});
-    setAuthError('');
-  };
-
   return (
     <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50/40 min-h-screen py-16 px-4 flex flex-col justify-center font-sans" id="farmer-login-root">
       
@@ -95,22 +87,6 @@ export default function FarmerLogin() {
           </div>
           <h2 className="text-2xl font-black text-emerald-950 tracking-tight">{t('kisanLogin')}</h2>
           <p className="text-sm text-emerald-900/60 mt-1.5">{t('loginCredentialsSub')}</p>
-        </div>
-
-        {/* Credentials reminder badge */}
-        <div className="bg-emerald-500/5 border border-emerald-100/80 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div>
-            <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest leading-none">{t('testingCredentials')}</p>
-            <p className="text-xs text-emerald-955 mt-1">{t('mobileNumber')}: <strong className="font-extrabold text-emerald-800">9876543210</strong></p>
-            <p className="text-xs text-emerald-955">{t('password')}: <strong className="font-extrabold text-emerald-800">farmer123</strong></p>
-          </div>
-          <button 
-            type="button" 
-            onClick={handleAutofill}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-extrabold px-3 py-2 rounded-xl transition duration-150 flex-shrink-0 cursor-pointer"
-          >
-            {t('autofillMock')}
-          </button>
         </div>
 
         {authError && (
