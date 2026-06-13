@@ -28,6 +28,7 @@ import AdminLogin from './pages/AdminLogin';
 import Unauthorized from './pages/Unauthorized';
 import UserDashboard from './pages/UserDashboard';
 import Chatbot from './pages/Chatbot';
+import Profile from './pages/Profile';
 
 export default function App() {
   return (
@@ -56,6 +57,14 @@ export default function App() {
                       <UserDashboard />
                     </ProtectedRoute>
                   } 
+                />
+                <Route 
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
                 />
                 <Route 
                   path="/crop-recommendation" 

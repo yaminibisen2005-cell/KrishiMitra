@@ -8,6 +8,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/authContext';
 import { useTranslation } from '../context/LanguageContext';
 import LanguageDropdown from './LanguageDropdown';
+import ProfileAvatar from './ProfileAvatar';
 import { 
   Menu, 
   X, 
@@ -170,7 +171,8 @@ export default function Navbar() {
                     </div>
                   )}
 
-                  {/* Refined Logout trigger */}
+                  {/* Profile avatar + Logout trigger */}
+                  <ProfileAvatar />
                   <button
                     onClick={handleLogoutClick}
                     className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition duration-150 outline-none focus:ring-2 focus:ring-red-500/20 md:cursor-pointer"
@@ -239,8 +241,9 @@ export default function Navbar() {
                     <p className="text-[10px] text-emerald-700 font-black uppercase tracking-widest leading-none mt-0.5">{user.role}</p>
                   </div>
                 </div>
-                <div className="bg-emerald-600/10 text-emerald-700 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-100/30">
-                  ID Active
+                <div className="flex items-center gap-2">
+                  <Link to="/profile" onClick={() => setIsOpen(false)} className="text-xs font-bold text-emerald-700 px-3 py-1 rounded-xl border border-emerald-100/40">Profile</Link>
+                  <div className="bg-emerald-600/10 text-emerald-700 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-100/30">ID Active</div>
                 </div>
               </div>
             )}

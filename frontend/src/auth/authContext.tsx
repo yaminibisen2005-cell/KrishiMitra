@@ -5,6 +5,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService, UserSession, UserRecord } from './authService';
+import { profileService } from '../services/profileService';
 
 interface AuthContextType {
   user: UserSession | null;
@@ -15,6 +16,7 @@ interface AuthContextType {
   registerUser: (user: Omit<UserRecord, 'id' | 'role'>) => Promise<UserRecord>;
   logout: () => void;
   checkAuth: () => void;
+  updateProfile?: (id: string, updates: Partial<UserRecord & { preferredLanguage?: string }>) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,6 +38,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error('Failed to parse active user session', err);
       setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProfile = async (id: string, updates: Partial<UserRecord & { preferredLanguage?: string }>) => {
+    setLoading(true);
+    try {
+      const updated = await profileService.updateProfile(id, updates as any);
+
+      // If the current session belongs to this id, update session name & mobile
+      const current = authService.getCurrentUser();
+      if (current && current.id === id) {
+        const newSession: UserSession = {
+          ...current,
+          name: (updated as any).name || current.name,
+          mobile: (updated as any).mobile || current.mobile,
+        };
+        localStorage.setItem('krishimitra_active_session', JSON.stringify(newSession));
+        setUser(newSession);
+      }
+
+      return updated;
+    } catch (err) {
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -93,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginUser,
         loginAdmin,
         registerUser,
+        updateProfile,
         logout,
         checkAuth,
       }}
